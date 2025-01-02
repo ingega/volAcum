@@ -45,6 +45,11 @@ hours = 1  # 1 raise zero in preview
 minutes = 1  # 1 raise zero in preview
 seconds = 40
 
+# config for review()
+review_hour = 4
+review_minute = 59
+review_second = 45
+
 interval="4h"
 
 reverse=False  # in this system is doesn't matter because is double bet

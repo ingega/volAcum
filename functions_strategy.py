@@ -432,9 +432,12 @@ def review():
                 make_entries(df_in)
                 # and that's it, because the system remanins in protect()
         else:
-            msg=f"system works normally, the gmtime is {time.gmtime()} sended by review "
+            msg=f"system works normally, not new oppontunity reached the gmtime is {time.gmtime()} by review "
             escribirlog(msg)
-            miMail(msg)
+            # in case that review hour is reached, send a mail
+            if hour == data.review_hour - 1 and minutes == data.review_minute -1 and seconds > data.review_second:
+                msg = f"system works normally, infomed by review, gmtime: {time.gmtime()}"
+                miMail(msg)
         time.sleep(16)  # cicling avoid
 
 
