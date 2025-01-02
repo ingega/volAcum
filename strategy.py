@@ -6,7 +6,7 @@ from functions_strategy import miMail, BinanceAPIException
 from functions_files import escribirlog
 import requests
 from main import get_all_pairs_opor
-from decorator import print_func_text
+from decorators import print_func_text
 from tickers import Ticker
 from orders import Order
 

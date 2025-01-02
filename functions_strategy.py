@@ -7,7 +7,7 @@ import data, time
 from functions import datosSalida
 from tickers import Ticker
 from orders import Order
-from decorator import print_func_text
+from decorators import print_func_text
 from main import get_all_pairs_opor
 from strategy import make_entries
 
@@ -434,8 +434,11 @@ def review():
         else:
             msg=f"system works normally, not new oppontunity reached the gmtime is {time.gmtime()} by review "
             escribirlog(msg)
+            # we need another extra var for hour, because hour is used for review()
+            inform_hour = time.gmtime().tm_hour
+            inform_hour %= data.review_hour
             # in case that review hour is reached, send a mail
-            if hour == data.review_hour - 1 and minutes == data.review_minute -1 and seconds > data.review_second:
+            if inform_hour == data.review_hour - 1 and minutes == data.review_minute -1 and seconds > data.review_second:
                 msg = f"system works normally, infomed by review, gmtime: {time.gmtime()}"
                 miMail(msg)
         time.sleep(16)  # cicling avoid

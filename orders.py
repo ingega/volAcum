@@ -1,6 +1,6 @@
 from functions import escribirlog
 import data
-from decorator import print_func_text
+from decorators import print_func_text
 import pickle as pk
 
 class Order:

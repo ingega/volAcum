@@ -3,7 +3,7 @@ import data
 from sendmail import enviarcorreo
 from functions_files import *
 from main import *
-from decorator import print_func_text
+from decorators import print_func_text
 
 
 cliente = Client(key.api_key, key.api_secret,requests_params={'timeout': 30})

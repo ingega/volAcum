@@ -1,5 +1,5 @@
 import pickle as pk
-from decorator import print_func_text
+from decorators import print_func_text
 from functions import escribirlog
 import data
 

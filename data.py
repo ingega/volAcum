@@ -47,7 +47,7 @@ seconds = 40
 
 # config for review()
 review_hour = 4
-review_minute = 59
+review_minute = 60
 review_second = 45
 
 interval="4h"

@@ -2,7 +2,7 @@ import data
 from functions_files import escribirlog,escribirerror, leerDic
 from functions import BinanceAPIException
 import time
-from decorator import print_func_text
+from decorators import print_func_text
 from tickers import Ticker
 
 path=data.path
