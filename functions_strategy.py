@@ -402,8 +402,26 @@ def protect():
         else:
             break
 
+def notice_mail():
+    # we need another extra var for hour, because hour is used for review()
+    print('noticed')
+    inform_hour = time.gmtime().tm_hour
+    inform_hour %= data.review_hour
+    minutes = time.gmtime().tm_min
+    seconds = time.gmtime().tm_sec
+    # in case that review hour is reached, send a mail
+    if inform_hour == data.review_hour - 1 and minutes == data.review_minute - 1 and seconds > data.review_second:
+        msg = f"system works normally, infomed by review, gmtime: {time.gmtime()}"
+        miMail(msg)
+        time.sleep(18) # colcing avoid
+
+
 def review():
     hour = time.gmtime().tm_hour  # las horas
+    # only get oppor in schedulle
+    if hour < data.forbidden_hour:
+        notice_mail()
+        return
     minutes = time.gmtime().tm_min  # los minutos
     seconds = time.gmtime().tm_sec
     hour %= data.hours
@@ -431,17 +449,12 @@ def review():
                 miMail(msg)
                 make_entries(df_in)
                 # and that's it, because the system remanins in protect()
+            else:
+                notice_mail()
         else:
             msg=f"system works normally, not new oppontunity reached the gmtime is {time.gmtime()} by review "
             escribirlog(msg)
-            # we need another extra var for hour, because hour is used for review()
-            inform_hour = time.gmtime().tm_hour
-            inform_hour %= data.review_hour
-            # in case that review hour is reached, send a mail
-            if inform_hour == data.review_hour - 1 and minutes == data.review_minute -1 and seconds > data.review_second:
-                msg = f"system works normally, infomed by review, gmtime: {time.gmtime()}"
-                miMail(msg)
-        time.sleep(16)  # cicling avoid
+            notice_mail()
 
 
 def checarOrdenesAbiertas(ticker):
