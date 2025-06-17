@@ -4,7 +4,7 @@ from csv import reader
 
 
 def escribirlog(mensaje):
-    miarch=open(path +"log.txt","a")
+    miarch=open(path / "log.txt","a")
     msj=mensaje + " " + time.asctime(time.gmtime()) + "\n"
     miarch.write(msj)
     miarch.close()
@@ -80,7 +80,7 @@ def datosEx(moneda, lvg):
     return salida
 
 def escribirerror(mensaje,codigo):
-    miarch=open(path +"errorlog.txt","a")
+    miarch=open(path / "errorlog.txt","a")
     strcode=str(codigo)
     msj="la API de binance cometio un error consistente en " + mensaje + " error no. " + strcode + " hora local: " + time.ctime() + "\n"
     miarch.write(msj)

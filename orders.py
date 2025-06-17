@@ -1,12 +1,12 @@
-from functions import escribirlog
-import data
+from functions_files import escribirlog
 from decorators import print_func_text
 import pickle as pk
+import data as dt
 
 class Order:
     def __init__(self,**kwargs):
         self.ticker=kwargs.get('ticker')
-        self.path=data.pathGan + "orders.pkl"
+        self.path = dt.path / "orders.pkl"
 
     @print_func_text
     def add_order(self, params):

@@ -1,6 +1,5 @@
 import time
-
-import data
+from data import hours
 
 
 def cada55():
@@ -86,26 +85,26 @@ def everyDay():
     # y,m,d,h,min,sec
     time.sleep(20)  # avoid loop
     while True:
-        hours = time.gmtime().tm_hour
-        if hours == data.hours-1:
+        hour = time.gmtime().tm_hour
+        if hour == hours - 1:
             everyHour()
             break
         else:
             time.sleep(60 * 40)  # in order to check every 40 minutes
 
-def every_time(hours=0,mins=0,secs=0):
+def every_time(hrs=0, mins=0, secs=0):
     while True:
         # we need a pause in order to avoid looping
         time.sleep(10)
-        if hours > 0:
+        if hrs > 0:
             # if mins and secs are no set, send an error
             if mins * secs == 0:
                 print(f'mins and secs must be set')
                 return
             while True:
                 hour = time.gmtime().tm_hour
-                hour %= data.hours
-                if hour == hours - 1:
+                hour %= hrs
+                if hour == hrs - 1:
                     break
                 else:
                     time.sleep(2400)  # 40 mins

@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*- 
 import smtplib
 from email.message import EmailMessage
 import time
-path=""
+path = ""
 
 def escribirlog(mensaje):
-    miarch=open(path +"log.txt","a")
-    msj=mensaje + " " + time.asctime(time.gmtime()) + "\n"
+    miarch = open(path + "log.txt","a")
+    msj = f"{mensaje} {time.asctime(time.gmtime())}\n"
     miarch.write(msj)
     miarch.close()
     print(msj)

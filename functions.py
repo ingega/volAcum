@@ -1,26 +1,31 @@
 from binance.exceptions import BinanceAPIException
-import data
 from sendmail import enviarcorreo
 from functions_files import *
 from main import *
 from decorators import print_func_text
+from tickers import Ticker
 
 
-cliente = Client(key.api_key, key.api_secret,requests_params={'timeout': 30})
+cliente = client
+path = data.path
 
-path=data.path
 
-def miMail(msj,filepath=None):
-    ticker=leerDic(path+"ticker.txt")['ticker']
-    asunto=data.sistema+ " " + data.usuario+" bahia" + str(data.bahia) + ":" + ticker
-    enviarcorreo(asunto,msj,filepath)
+def miMail(msj, filepath=None):
+    # ticker is a class now
+    tickers = list(Ticker().read_ticker())
+    ticker = 'No ticker'
+    if len(tickers) > 0:
+        ticker = tickers[0]
+    asunto = (f"strategy {data.sistema} for {data.usuario} bahia "
+              f"{data.bahia} with ticker: {ticker}")
+    enviarcorreo(asunto, msj, filepath)
+
 
 def rescate():
     salida=False
     print("proceso de rescate terminado")
     return salida
 
-#se requieren contadores de tiempo, leer barras poner ordenes limit/stop, checar ordenes, cancelarlas
 
 def cambiarleverage(simbolo,lvg):
     msg="we're in begin of cambiarLeverage"
@@ -58,12 +63,6 @@ def cambiarleverage(simbolo,lvg):
                 time.sleep(a)
     return lvgA
 
-# ahora la media:
-
-def listaPandas(lista):
-    columnas = ["fecha", "open", "high", "low", "close", "epoch", "epochFin", "volumen"]
-    nuevo = pd.DataFrame(lista,index=None,columns=columnas)
-    return nuevo
 
 def ultimoPrecio(moneda):
     intervalo="1m"
@@ -87,19 +86,9 @@ def ultimoPrecio(moneda):
             exit()
     return precio
 
-def borrarArchivos():
-    miArch=open(path+"order.txt","w")
-    miArch.write("")
-    miArch.close()
-    #además se cancelan las ordenes abietas
-    misDatos=leerDic(path+"ticker.txt")
-    ticker=misDatos['ticker']
-    from functions_orders import cancelarOrdenes
-    cancelarOrdenes(ticker)
 
 def obtenerSaldo():
-    dicto=leerDic(path+"ticker.txt")
-    asset=dicto['quoteAsset']   #para que me de el saldo en el asset correcto
+    asset = "USDT"   # para que me de el saldo en el asset correcto
     n=0
     a=0
     saldo=0
@@ -127,66 +116,33 @@ def obtenerSaldo():
 
 def cambiarSaldo(saldoN): # nuevo saldo
     #checamos primero el saldo "viejo"
-    saldoA=Archivo(data.pathGan+"balance.txt")
-    miArch=open(data.pathGan+"balance.txt","w")
+    saldoA=Archivo(data.path / "balance.txt")
+    miArch=open(data.path / "balance.txt","w")
     miArch.write(str(saldoN))
     miArch.close()
-    msj="The old balance was: " + saldoA + " the new one: " + str(saldoN)
+    msj = f"The old balance was: {saldoA} the new one: {saldoN}"
     escribirlog(msj)
+
 
 @print_func_text
 def updateLocalBalance(NBalance): # nuevo saldo
     #checamos primero el saldo "viejo"
-    saldoA=Archivo(path+"balance.txt")
-    miArch=open(path+"balance.txt","w")
+    saldoA=Archivo("balance.txt")
+    miArch=open("balance.txt","w")
     miArch.write(str(NBalance))
     miArch.close()
-    msj="The old local balance was: " + saldoA + " the new one: " + str(NBalance)
+    msj=("The old local balance was: "
+         + saldoA + " the new one: "
+         + str(NBalance)
+         )
     escribirlog(msj)
+
 
 def update_avalaible_balance(money):
     from functions_orders import Balance
     balance=Balance(money)
     balance.set_balance()
 
-
-def changeTicker(ticker):
-    msg="We're inside of change ticker " + ticker
-    escribirlog(msg)
-    # adjust lvg
-    lvg=cambiarleverage(ticker,20)
-    # get data
-    losDatos = datosEx(ticker, lvg)
-    dicto = {
-        'ticker': ticker,
-        'precision': losDatos['precision'],
-        'presCant': losDatos['presCant'],
-        'quoteAsset':losDatos['quoteAsset'],
-        'entrada': losDatos['entrada'],
-        'cantidadMinima': losDatos['cantidadMinima'],
-        'minMoney':losDatos['minimoNot'],
-        'leverage': lvg,
-    }
-    escribirDic(path+"ticker.txt",dicto)
-    msj="update ticker.txt"
-    escribirlog(msj)
-    # ahora config
-    # hay que sacar el % de entrada
-    rel=20/lvg
-    porcIn=rel*data.porcentajeentrada
-    # saco el dicto
-    dicto={
-        'ticker':ticker,
-        'sl':0.0125,  # por el momento sólo habrá este valor
-        'porcIn':porcIn,
-        'cambiar':False,
-    }
-    escribirDic(path+"config.txt",dicto)
-    msj="update config.txt"
-    escribirlog(msj)
-    # es todo amigos, sólo informar y ya
-    msj="we change succesfully da ticker data"
-    escribirlog(msj)
 
 @print_func_text
 def getRealDeal(ticker):
@@ -208,14 +164,14 @@ def getRealDeal(ticker):
     msg="dateIn, dateOut and simbol  are " + str(dateIn) + ", " + str(dateOut) + ", " + smb
     escribirlog(msg)
     try:
-        data = cliente.futures_income_history(startTime=dateIn, endTime=dateOut, symbol=smb)
+        query = cliente.futures_income_history(startTime=dateIn, endTime=dateOut, symbol=smb)
     except:
-        data=[]
-    if len(data)==0:
+        query=[]
+    if len(query)==0:
         msg="data has no records "
         escribirlog(msg)
         return False
-    df=pd.DataFrame(data)
+    df=pd.DataFrame(query)
     df['income']=df['income'].astype('float')
     profit=df['income'].sum()
     commission=df.loc[df['incomeType']=='COMMISSION']['income'].sum()
@@ -234,43 +190,50 @@ def getRealDeal(ticker):
     }
     return  ret
 
+
 @print_func_text
 def datosSalida(ticker,ganancia,resultado):
     from orders import Order
     from tickers import Ticker
     from functions_orders import Balance
-    msg=f'ext data have the values ticker {ticker} profit {ganancia} outcome {resultado}'
+    msg=(f'function exit data have the values ticker: '
+         f'{ticker}, profit: {ganancia}, '
+         f'outcome: {resultado}')
     escribirlog(msg)
     # qty and originPrice is in order
-    order=Order(ticker=ticker)
-    data_order=order.read_order()[ticker]
-    qty=data_order['qty']
-    price_in=data_order['priceIn']
-    lana=ganancia*qty*price_in
-    msj=f"the profit in money is {lana:.2f} "
+    order = Order(ticker=ticker)
+    data_order = order.read_order()[ticker]
+    qty = data_order['qty']
+    price_in = data_order['priceIn']
+    lana = ganancia*qty*price_in
+    msj = f"the profit in money is {lana:.2f} "
     escribirlog(msj)
-    # money get's the own balance record
-    local_balance=float(Archivo(path+"balance.txt"))
-    msg=f'preview local balance is {local_balance}'
+    # money gets the own balance record
+    local_balance = float(Archivo("balance.txt"))
+    msg = f'preview local balance is {local_balance}'
     escribirlog(msg)
-    new_local_balance=local_balance+lana
-    msg=f'new local balance is {new_local_balance}'
+    new_local_balance = local_balance+lana
+    msg = f'new local balance is {new_local_balance}'
     escribirlog(msg)
     updateLocalBalance(new_local_balance)
-    saldo=float(Archivo(data.pathGan+"balance.txt"))
+    saldo=float(Archivo("balance.txt"))
     msg=f'preview master balance is {saldo}'
     escribirlog(msg)
-    saldo+=lana
+    saldo += lana
     cambiarSaldo(saldo)
     msg=f'new master balance is {saldo}'
     escribirlog(msg)
     # now we need to restore the avalaible balance
-    balance=Balance(saldo)
+    balance = Balance(saldo)
     balance.set_balance()
-    saldoCta=obtenerSaldo()
-    # ok the accounts doesn't look to check, in balance lose more money than the calculations, so that's wy i'm
-    # beggining a new function, to look (check) the real trade, and compare with the calculate trade, and then
-    # make it necesaries adjusts for the future BT (init feb 2024)
+    saldoCta = obtenerSaldo()
+    """
+    ok the accounts doesn't look to check, 
+    in balance loss more money than the calculations, 
+    so that's wy i'm begining a new function, to look (check) 
+    the real trade, and compare with the calculate trade, and then
+    make it necesaries adjusts for the future BT (init feb 2024)
+    """
     real = getRealDeal(ticker)
     msg = "the real file is " + str(real)
     escribirlog(msg)
@@ -288,54 +251,43 @@ def datosSalida(ticker,ganancia,resultado):
     dateOut=data_order['dateOut']
     priceOut=data_order['priceOut']
     profit=ganancia
-    # new data is ticker,side,qty,dateIn,priceIn,dateOut,priceOut,profit,real,pnl,commission,funding,fileBalance,balance
-    salida=ticker,side,resultado,qty,dateIn,price_in,dateOut,priceOut,profit,lana,real['profit'],real['pnl'],real['commission'],real['funding'], real['operations'],saldo,new_local_balance,saldoCta
-    agregardatoscsv(path+"entries.csv",salida)
+    """
+    new data is :
+    ticker, side, qty, dateIn, priceIn
+    dateOut, priceOut, profit
+    real,pnl, commission,funding
+    fileBalance, balance
+    """
+
+    salida=(ticker, side, resultado, qty, dateIn, price_in, dateOut,
+            priceOut, profit, lana, real['profit'], real['pnl'],
+            real['commission'], real['funding'], real['operations'],
+            saldo, new_local_balance, saldoCta
+            )
+    agregardatoscsv(path / "entries.csv",salida)
     # informamos al usuario
-    msj=f"We realized da Exit function, the balance in file is {saldo:.2f} and the local balance is {new_local_balance:.2f}  and balance account is {saldoCta:.2f} "
+    msj=(f"We realized da Exit function, the balance in file is "
+         f"{saldo:.2f} and the local balance is "
+         f"{new_local_balance:.2f}  "
+         f"and balance account is {saldoCta:.2f} "
+         )
     escribirlog(msj)
     # enviamos el correo
-    msj=f"We realized da Exit function, the outcome is {resultado} exit data are {salida}"
+    msj=(f"We realized da Exit function, the outcome is "
+         f"{resultado} exit data are {salida}"
+         )
     escribirlog(msj)
     miMail(msj)
     # finally we must remove from the orders and ticker, the ticker
     msg=f'debugging order, actual order value is {order.read_order()}'
     escribirlog(msg)
-    order=Order(ticker=ticker)
+    order = Order(ticker=ticker)
     order.del_order()
-    tk=Ticker(ticker=ticker)
+    tk = Ticker(ticker=ticker)
     msg = f'debugging ticker, actual ticker value is {tk.read_ticker()}'
     escribirlog(msg)
     tk.del_ticker()
 
-
-def salidaDeEmergencia():
-    '''
-    esta función se usa si se triggea inmediatamente el sl
-    lo que hace es sacar los datos de la order.txt y mandar la contra a mercado, avisar al usuario y mandar datosdesalida para los registros y salida del sistema
-    '''
-    from functions_orders import checarOrden
-    posicionSalida=""
-    miArch=open(path+"order.txt")
-    eldato=miArch.read()
-    miArch.close()
-    misdatos=leerDic(path+"ticker.txt")
-    moneda=misdatos['ticker']
-    #paso no. 1 sacamos la posicion y cantidad de la order.txt
-    eldato=int(eldato)
-    miorden=checarOrden(moneda,eldato)
-    cantidad=miorden[0]
-    posicion=miorden[2]
-    if posicion=="BUY":
-        posicionSalida="SELL"
-    elif posicion=="SELL":
-        posicionSalida="BUY"
-    msj="se va a mandar una salida de emergencia, con posicion " + posicionSalida + " de " + str(cantidad) + " "
-    escribirlog(msj)
-    from functions_orders import mandarOrdenMercado
-    orden=mandarOrdenMercado(moneda,posicionSalida,cantidad)
-    msj="se mando cerrar con exito la orden, la id es " + str(orden) + " "
-    escribirlog(msj)
 
 def checarParcial():
     from functions_orders import checarOrden

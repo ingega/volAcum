@@ -4,12 +4,19 @@ from binance.client import Client
 
 import data
 #from binance.exceptions import BinanceAPIException
-import key # da api_key
 import requests, time
 import hashlib
 import hmac
+import os
+from dotenv import load_dotenv
 
-client = Client(key.api_key, key.api_secret)
+
+# let's load the env
+load_dotenv()
+api_key = os.getenv('API_KEY')
+api_secret = os.getenv('API_SECRET')
+
+client = Client(api_key, api_secret, requests_params={'timeout': 30})
 
 class DataHandler:
     def __init__(self, api_key, api_secret):
@@ -128,7 +135,7 @@ def pairs():
     return pairs
 
 def get_all_pairs_opor():
-    datahandler=DataHandler(key.api_key, key.api_secret)
+    datahandler=DataHandler(api_key, api_secret)
     p=pd.read_csv('ticks.csv',header=None)
     p=p.to_dict(orient='records')
     cols=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time',
