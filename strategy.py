@@ -180,7 +180,7 @@ def main():
                            f"th hour is not allowed for strategy, "
                            f"the gmtime is {time.asctime(time.gmtime())} ")
                     escribirlog(msg)
-                    miMail(msg)
+                    # miMail(msg)  # in this strategy is not used
                 else:
                     # Get the Bars opor
                     print("let's find an opportunity", time.ctime())
