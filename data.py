@@ -49,8 +49,8 @@ seconds = 40
 
 # config for review()
 review_hour = 4
-review_minute = 60
-review_second = 40
+review_minute = 59
+review_second = 0
 
 interval = "4h"
 bet_continue = True  # the bet ends until there's n bars without a sl

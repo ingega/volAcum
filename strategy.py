@@ -1,3 +1,5 @@
+import time
+
 from functions_time import *
 import data
 from functions import miMail, BinanceAPIException
@@ -16,9 +18,15 @@ def inform(the_data, filename=None):  # to inform about the values in entries, a
     # inform
     msg = f"there's no entry yet, the values are {the_data}, gmtime is {time.gmtime()}"
     escribirlog(msg)
-    miMail(msg, filename)
-    pause = 60 - data.seconds
-    time.sleep(pause + 1)  # avoid loop
+    # mail just every 4h
+    hour = time.gmtime().tm_hour
+    minute = time.gmtime().tm_min
+    second = time.gmtime().tm_sec
+    hour %= 4
+    if hour == data.review_hour and minute == data.review_minute and second > data.review_second:
+        miMail(msg, filename)
+    # pause = 60 - data.seconds
+    # time.sleep(pause + 1)  # avoid loop
 
 
 @print_func_text
