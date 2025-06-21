@@ -77,6 +77,19 @@ class Record:
             print(f"Error reading data: {e}")
             return None
 
+    def read_db(self):
+        table_name = 'operations'  # Replace with your actual table name
+
+        try:
+            with self.engine.connect() as connection:
+                query = f"SELECT * FROM {table_name};"
+                df = pd.read_sql(query, connection)
+            print(f"Data for db is ready")
+            return df.to_dict(orient='records')
+        except Exception as e:
+            print(f"Error reading data: {e}")
+            return None
+
     def edit_record(self, operation_id, changes):
         """
             changes is a key/value pair as
