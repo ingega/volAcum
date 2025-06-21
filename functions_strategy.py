@@ -545,13 +545,13 @@ def protect():
                         # in Exit, the order and ticker will be removed,
                         # so any action is necessary
                     # now wee need to review the time ellapsed for tie
-                    r=order.read_order()[ticker]
+                    r = order.read_order()[ticker]
                     if r['epochIn']>0:
                         time_elapsed=time.time()-r['epochIn']
                         if time_elapsed>(60 * data.barras):  # bars is in minutes
                             # inform, then make exit with getEntry,
                             # then call dataExit
-                            msg=(f'the time elapsed for tie is '
+                            msg = (f'the time elapsed for tie is '
                                  f'{time_elapsed} secs, '
                                  f'is time for declare a tie ')
                             escribirlog(msg)
@@ -576,29 +576,29 @@ def review():
     # we must notify to email
     # we need review of any ticker get the 3bp
     if (
-            actual_hour == data.hours - 1
-            and actual_minutes == data.minutes - 1
-            and actual_seconds > data.seconds
+            actual_hour == data.review_hour - 1
+            and actual_minutes == data.review_minute - 1
+            and actual_seconds > data.review_second
     ):
         msg=f'is time to check for new oportunities, gmtime is {time.gmtime()}'
         escribirlog(msg)
-        g=get_all_pairs_opor()
-        msg=f'the value for g is {g}'
+        g = get_all_pairs_opor()
+        msg = f'the value for g is {g}'
         escribirlog(msg)
         df_in = g['df_in']
-        if len(df_in)>0: # well, in this case, the tickers inside
+        if len(df_in) > 0: # well, in this case, the tickers inside
             # must be removed from the list, so
             # the better way to do this is using
             # map objects and the substract
-            tickers_opor=map(str,df_in['ticker'])
-            order=Order()
-            tickers_in=order.read_order()
+            tickers_opor = map(str,df_in['ticker'])
+            order = Order()
+            tickers_in = order.read_order()
             # then get the elements that not are inside right now
             result = [item for item in tickers_opor if item not in tickers_in]
-            if len(result)>0:
+            if len(result) > 0:
                 df_in = df_in[df_in['ticker'].isin(result)]
                 # send mail to inform
-                msg=(f"in review locate an oportunitie in {len(df_in)} "
+                msg = (f"in review locate an oportunitie in {len(df_in)} "
                      f"tickers {df_in}")
                 escribirlog(msg)
                 miMail(msg)
