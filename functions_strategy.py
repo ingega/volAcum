@@ -622,6 +622,7 @@ def review():
     ):
         msg = "system works normally, inform by review"
         miMail(msg)
+        time.sleep(60)  # looping avoid
 
 
 def checarOrdenesAbiertas(ticker):
