@@ -14,7 +14,6 @@ from main import get_all_pairs_opor
 from strategy import make_3bp_entries
 
 
-
 def checkInit():
     # this function check if any order it's open
     msg = "we're init da checkInit module "
@@ -27,36 +26,37 @@ def checkInit():
     while True:
         checkBuy = checarOrden(ticker, buyOrder)
         checkSell = checarOrden(ticker, sellOrder)
-        statusBuy=checkBuy['status']
-        statusSell=checkSell['status']
-        if statusSell=='FILLED':  # SELL order won
+        statusBuy = checkBuy['status']
+        statusSell = checkSell['status']
+        if statusSell == 'FILLED':  # SELL order won
             Data['side'] = 'SELL'
-            Data['orderA']=sellOrder
-            Data['priceIn']=checkSell['precio']
-            Data['originalPrice']=checkSell['precio']
-            Data['dateIn']=time.time()
-            escribirDic(data.path / "order.txt",Data)
+            Data['orderA'] = sellOrder
+            Data['priceIn'] = checkSell['precio']
+            Data['originalPrice'] = checkSell['precio']
+            Data['dateIn'] = time.time()
+            escribirDic(data.path / "order.txt", Data)
             # we must cancell the other order, in this case, buyOrder
-            cancel=cancelarOrden(buyOrder, ticker)
-            msj="the sell order won, now we proceed to stablish tp/sl orders, and buy order it's canceled with idOrden " + str(cancel)
+            cancel = cancelarOrden(buyOrder, ticker)
+            msj = "the sell order won, now we proceed to stablish tp/sl orders, and buy order it's canceled with idOrden " + str(
+                cancel)
             escribirlog(msj)
             # stablish orders
             establecerOrdenes(0)
             # let's go to protect()
             while True:
-                checkP=protect()
-                if checkP==0:
+                checkP = protect()
+                if checkP == 0:
                     break
                 else:
-                    msg="the system hit sl, we call protect() by hismself "
+                    msg = "the system hit sl, we call protect() by hismself "
                     escribirlog(msg)
             break
-        elif statusBuy=='FILLED':
-            Data['side']='BUY'
+        elif statusBuy == 'FILLED':
+            Data['side'] = 'BUY'
             Data['orderA'] = buyOrder
             Data['priceIn'] = checkBuy['precio']
             Data['originalPrice'] = checkBuy['precio']
-            Data['dateIn']=time.time()
+            Data['dateIn'] = time.time()
             escribirDic(data.path / "order.txt", Data)
             # we must cancell the other order, in this case, sellOrder
             cancel = cancelarOrden(sellOrder, ticker)
@@ -77,33 +77,33 @@ def checkInit():
             break
         else:
             time.sleep(data.timeframe)
-            p+=1
-            if p>300:
-                msj="system work on original open, everething it's fine"
+            p += 1
+            if p > 300:
+                msj = "system work on original open, everething it's fine"
                 escribirlog(msj)
-                p=0
+                p = 0
             hour = time.gmtime().tm_hour
             minute = time.gmtime().tm_min
             second = time.gmtime().tm_sec
             hour %= 4
             if hour == 0 and minute == 59 and second > 50:
-                msj="system work on original open, everething it's fine"
+                msj = "system work on original open, everething it's fine"
                 escribirlog(msj)
                 miMail(msj)
                 time.sleep(10)
 
 
-def bothSidesOrders(ticker,price):
-    msj="we're init da bothSideOrders module, the price that we'll use is " + str(price)
+def bothSidesOrders(ticker, price):
+    msj = "we're init da bothSideOrders module, the price that we'll use is " + str(price)
     escribirlog(msj)
-    qty=obtenerCantidad()
-    Data=leerDic(data.path / "ticker.txt")
-    precision=Data['precision']
+    qty = obtenerCantidad()
+    Data = leerDic(data.path / "ticker.txt")
+    precision = Data['precision']
     # upPrice = price*(1+distance)
     # upPrice=round(upPrice,precision)
     upPrice = 0
-    buyOrder=mandarOrdenStopMarket(ticker,"BUY",qty,upPrice)
-    msj="we set the buy order with orderId " + str(buyOrder)
+    buyOrder = mandarOrdenStopMarket(ticker, "BUY", qty, upPrice)
+    msj = "we set the buy order with orderId " + str(buyOrder)
     escribirlog(msj)
     # sell order
     # downPrice = price * (1 - distance)
@@ -113,28 +113,28 @@ def bothSidesOrders(ticker,price):
     msj = "we set the sell order with orderId " + str(sellOrder)
     escribirlog(msj)
     # let's update the order.txt
-    Data=leerDic(data.path / "order.txt")
-    Data['buyOrder']=buyOrder
-    Data['sellOrder']=sellOrder
-    Data['qty']=qty
-    escribirDic(data.path / "order.txt",Data)
+    Data = leerDic(data.path / "order.txt")
+    Data['buyOrder'] = buyOrder
+    Data['sellOrder'] = sellOrder
+    Data['qty'] = qty
+    escribirDic(data.path / "order.txt", Data)
     # now let's check it
-    checkInit()   # to the end of in
+    checkInit()  # to the end of in
     msj = "we're finish da bothSideOrders module"
     escribirlog(msj)
 
 
 @print_func_text
-def getEntry(ticker,side):
+def getEntry(ticker, side):
     # first step, get quantity
     qty = obtenerCantidad(ticker)
-    order = mandarOrdenMercado(ticker,side,qty,False)
+    order = mandarOrdenMercado(ticker, side, qty, False)
     time.sleep(5)
     msg = f"The market order in {side} of {ticker} was successfully "
     escribirlog(msg)
     ret = {
-        'orderId':order,
-        'qty':qty,
+        'orderId': order,
+        'qty': qty,
     }
     return ret
 
@@ -146,7 +146,7 @@ def error_close(side, ticker):
     actualOrder = leerDic(data.path / "order.txt")
     actualOrder['dateOut'] = time.time()
     actualOrder['priceOut'] = cierre['priceOut']
-    actualOrder['side']=side
+    actualOrder['side'] = side
     escribirDic(data.path / "order.txt", actualOrder)
     datosSalida(ticker, ganancia, "error")
 
@@ -179,8 +179,8 @@ def establecerOrdenes(orden, ticker):  # order = 0 is for initial bet
             precioSL = precioIn * (1 - data.bet)
             precioTP = precioIn * (1 + data.bet)
         else:
-            precioSL=precioIn*(1 - data.sl)
-            precioTP=precioIn*(1 + data.tp + ajuste_loss)
+            precioSL = precioIn * (1 - data.sl)
+            precioTP = precioIn * (1 + data.tp + ajuste_loss)
     else:
         if orden == 0:
             precioSL = precioIn * (1 + data.bet)
@@ -188,11 +188,11 @@ def establecerOrdenes(orden, ticker):  # order = 0 is for initial bet
         else:
             precioSL = precioIn * (1 + data.sl)
             precioTP = precioIn * (1 - data.tp - ajuste_loss)
-    precioTP = round(precioTP,precision)
-    precioSL = round(precioSL,precision)
+    precioTP = round(precioTP, precision)
+    precioSL = round(precioSL, precision)
     ordensl = mandarOrdenStopMarket(ticker, posicion, lacantidad, precioSL)
     msj = (f"the SL and pullback order was seted in price "
-         f"{precioSL}  with orderId {ordensl} ")
+           f"{precioSL}  with orderId {ordensl} ")
     escribirlog(msj)
     '''
     OK, but what if couldn't set the order? 
@@ -209,26 +209,26 @@ def establecerOrdenes(orden, ticker):  # order = 0 is for initial bet
     for the moment i take the second one
     '''
     if ordensl == 0:  # let's go
-        msg=("The orderSL is 0, the pullback/pushup must be agressive, "
-             "so in order to prevent more losses, the bot call error_close")
+        msg = ("The orderSL is 0, the pullback/pushup must be agressive, "
+               "so in order to prevent more losses, the bot call error_close")
         escribirlog(msg)
         miMail(msg)
-        e = error_close(posicion,ticker)
+        e = error_close(posicion, ticker)
         # well, let's remove the ticker from orders and tickers
         ticker.del_ticker()
         order.del_order()
         return
     # now the tp order
-    ordentp = mandarOrdenTP(ticker,cantidad,posicion,precioTP)
+    ordentp = mandarOrdenTP(ticker, cantidad, posicion, precioTP)
     msj = f"the TP order has seted in price {precioTP} with orderId {ordentp} "
     escribirlog(msj)
     # let's update the order
     order.update_order(orderSL=ordensl, orderTP=ordentp)
     # if necessary, cancel the open orders remain
     if orden > 1:
-        c = cancelarOrden(orden,ticker)
+        c = cancelarOrden(orden, ticker)
         if c != 0:
-            msj=f"cancel order, was succesfully, the idOrder was {orden} "
+            msj = f"cancel order, was succesfully, the idOrder was {orden} "
             escribirlog(msj)
 
 
@@ -253,7 +253,7 @@ def tie_exit(ticker):
     msg = f'the partial profit for this operation in {ticker} is {ganancia}'
     escribirlog(msg)
     # we must update the dateOut and priceOut
-    order=Order(ticker=ticker)
+    order = Order(ticker=ticker)
     # the operation must be added to the db, and adjust change the type
     order_data = order.read_order()
     the_type = "indirect_sl" if (
@@ -286,7 +286,7 @@ def tie_exit(ticker):
     from db import Record
     record = Record()
     record.add_record(record=new_record)
-    order.update_order(dateOut=time.time(),priceOut=cierre['priceOut'])
+    order.update_order(dateOut=time.time(), priceOut=cierre['priceOut'])
     # and finally cancel openOrders
     cancelarOrdenes(ticker)
     # and return the profit
@@ -304,13 +304,13 @@ def make_exit(ticker, adjust, outcome):
     price_out = data_order['priceOut']
     side = data_order['side']
     if side == "BUY":
-        profit = (price_out-price_in) / price_in
+        profit = (price_out - price_in) / price_in
     else:
         profit = (price_in - price_out) / price_in
     # remove the last comission too
     profit -= adjust + 0.0008
     # we must check if is direct or indirect bet
-    if outcome=='TP':
+    if outcome == 'TP':
         if adjust == 0:
             outcome = "direct TP"
         elif adjust > 0:
@@ -327,20 +327,20 @@ def make_exit(ticker, adjust, outcome):
         escribirlog(msg)
         miMail(msg)
         outcome = "sl"
-    else: # there's only tie left
+    else:  # there's only tie left
         profit = adjust  # in tie we use this parameter for profit
     msj = (f"the outcome is {outcome}, data are priceIn {price_in}, "
            f"priceOut: {price_out} side {side}, profit {profit} call exit ")
     escribirlog(msj)
     # before get the exit data, is necesarie update the dateOut
-    if outcome!='tie':  # otherwise is not necesary
+    if outcome != 'tie':  # otherwise is not necesary
         order.update_order(dateOut=time.time())
     datosSalida(ticker, profit, outcome)
 
 
-def order_not_found(ticker,orderId):
+def order_not_found(ticker, orderId):
     abiertas = buscaManual(ticker)
-    status=""
+    status = ""
     if abiertas['abiertas'] == 0:
         msj = f"order {orderId} doesn\'t founded for binance API, neither with manual search "
         escribirlog(msj)
@@ -373,13 +373,13 @@ def protect():
     while True:
         order = Order()
         actual_orders = order.read_order()
-        if len(actual_orders)>0: # we have tickers to review
+        if len(actual_orders) > 0:  # we have tickers to review
             while True:  # break gets when len(order)==0
                 time.sleep(data.timeframe)
                 # in some points, every orders may be executed
                 order = Order()
                 actual_orders = order.read_order()
-                if len(actual_orders)==0:
+                if len(actual_orders) == 0:
                     break
                 for ticker in actual_orders:
                     # simply as review booth orders,
@@ -405,7 +405,7 @@ def protect():
                         # after any move, let's send into db
                         from strategy import get_trade, get_fee
                         trade = get_trade(ticker,
-                                           actual_orders[ticker]['orderSL']
+                                          actual_orders[ticker]['orderSL']
                                           )
                         commission = trade['commission']
                         pnl = trade['pnl']
@@ -443,7 +443,7 @@ def protect():
                         adjust = actual_orders[ticker]['adjust']
                         # let's get the loss profit
                         # is absolute, don't matter the side
-                        profit = abs((priceOut-priceIn)/priceIn)
+                        profit = abs((priceOut - priceIn) / priceIn)
                         # we need that order is pointing to a ticker
                         order_sl = Order(ticker=ticker)
                         # well, if bet_continue we always must re-set the epoch
@@ -451,7 +451,7 @@ def protect():
                             order_sl.update_order(epochIn=time.time())
                         else:
                             # if is the first sl, we need to update the epochIn
-                            if adjust == 0: # the original bet change
+                            if adjust == 0:  # the original bet change
                                 # the adjust value
                                 order_sl.update_order(epochIn=time.time())
                         adjust += profit + 0.0008
@@ -464,7 +464,7 @@ def protect():
                         # update in orders
                         order_sl.update_order(adjust=adjust,
                                               side=side, priceIn=priceOut)
-                        if adjust >= data.slmax: # see you later aligator
+                        if adjust >= data.slmax:  # see you later aligator
                             # we need to close the last operation
                             profit = tie_exit(ticker)
                             # update adjust
@@ -478,21 +478,21 @@ def protect():
                                    f'{adjust} ')
                             escribirlog(msg)
                             miMail(msg)
-                            make_exit(ticker, adjust,'SL')
+                            make_exit(ticker, adjust, 'SL')
                             break
                         # before of orderStablish, send the mail
                         msg = f'{ticker} fall in sl, the side was {side} and the adjust was {profit}, the total adjust is {adjust} '
                         escribirlog(msg)
                         miMail(msg)
                         # let's call establecerOrdenes
-                        establecerOrdenes(actual_orders[ticker]['orderTP'],ticker)
+                        establecerOrdenes(actual_orders[ticker]['orderTP'], ticker)
                     # now the tp
-                    tp_order=checarOrden(ticker, actual_orders[ticker]['orderTP'])
-                    if tp_order==0:
-                        status_tp=order_not_found(ticker,actual_orders[ticker]['orderTP'])
+                    tp_order = checarOrden(ticker, actual_orders[ticker]['orderTP'])
+                    if tp_order == 0:
+                        status_tp = order_not_found(ticker, actual_orders[ticker]['orderTP'])
                     else:
-                        status_tp=tp_order['status']
-                    if status_tp=='FILLED':  # winner winner chicken dinner
+                        status_tp = tp_order['status']
+                    if status_tp == 'FILLED':  # winner winner chicken dinner
                         # add the record
                         from strategy import get_trade, get_fee
                         # commission and pnl
@@ -530,11 +530,11 @@ def protect():
                         record = Record()
                         record.add_record(record=new_record)
                         # we need to update the priceOut, in limit orders are the 'precio' field
-                        price_out=tp_order['precio']
-                        date_out=time.time()  # the exactly is in tp_order data
+                        price_out = tp_order['precio']
+                        date_out = time.time()  # the exactly is in tp_order data
                         # is time to add the record
                         # update order
-                        order=Order(ticker=ticker)
+                        order = Order(ticker=ticker)
                         order.update_order(priceOut=price_out, dateOut=date_out)
                         make_exit(ticker, actual_orders[ticker]['adjust'], 'TP')
                         # cancel the sl order and exit
@@ -544,20 +544,20 @@ def protect():
                         # so any action is necessary
                     # now wee need to review the time ellapsed for tie
                     r = order.read_order()[ticker]
-                    if r['epochIn']>0:
-                        time_elapsed=time.time()-r['epochIn']
-                        if time_elapsed>(60 * data.barras):  # bars is in minutes
+                    if r['epochIn'] > 0:
+                        time_elapsed = time.time() - r['epochIn']
+                        if time_elapsed > (60 * data.barras):  # bars is in minutes
                             # inform, then make exit with getEntry,
                             # then call dataExit
                             msg = (f'the time elapsed for tie is '
-                                 f'{time_elapsed} secs, '
-                                 f'is time for declare a tie ')
+                                   f'{time_elapsed} secs, '
+                                   f'is time for declare a tie ')
                             escribirlog(msg)
-                            profit=tie_exit(ticker)
+                            profit = tie_exit(ticker)
                             # in tie, we need subtract the adjust
-                            adjust=r['adjust']
+                            adjust = r['adjust']
                             profit -= adjust
-                            make_exit(ticker,profit,"tie")
+                            make_exit(ticker, profit, "tie")
                 # after review all orders, we need to inform about the function status, but also review if any ticker
                 # get the 3bp
                 review()
@@ -578,17 +578,19 @@ def review():
             and actual_minutes == data.review_minute - 1
             and actual_seconds > data.review_second
     ):
-        msg=f'is time to check for new oportunities, gmtime is {time.gmtime()}'
+        msg = (f'is time to check for new oportunities, '
+               f'gmtime is {time.gmtime()}'
+               )
         escribirlog(msg)
         g = get_all_pairs_opor()
         msg = f'the value for g is {g}'
         escribirlog(msg)
         df_in = g['df_in']
-        if len(df_in) > 0: # well, in this case, the tickers inside
+        if len(df_in) > 0:  # well, in this case, the tickers inside
             # must be removed from the list, so
             # the better way to do this is using
             # map objects and the substract
-            tickers_opor = map(str,df_in['ticker'])
+            tickers_opor = map(str, df_in['ticker'])
             order = Order()
             tickers_in = order.read_order()
             # then get the elements that not are inside right now
@@ -596,35 +598,48 @@ def review():
             if len(result) > 0:
                 df_in = df_in[df_in['ticker'].isin(result)]
                 # send mail to inform
-                msg = (f"in review locate an oportunitie in {len(df_in)} "
-                     f"tickers {df_in}")
+                msg = (f"in review locate an opportunity in {len(df_in)} "
+                       f"tickers {df_in}"
+                       )
                 escribirlog(msg)
                 miMail(msg)
                 make_3bp_entries(df_in)
-                # and that's it, because the system remanins in protect()
+                # and that's it, because the system remains in protect()
         else:
-            msg=f"system works normally, the gmtime is {time.gmtime()} sended by review "
+            msg = (f"system works normally, the gmtime is "
+                   f"{time.gmtime()} sended by review "
+                   )
             escribirlog(msg)
             miMail(msg)
         time.sleep(16)  # cicling avoid
+    # in this point we can check if mail is necessary
+    actual_hour = time.gmtime().tm_hour % 4
+    actual_minutes = time.gmtime().tm_min
+    if (
+            actual_hour == data.review_hour
+            and actual_minutes == data.review_minute
+            and actual_seconds > data.review_second
+    ):
+        msg = "system works normally, inform by review"
+        miMail(msg)
 
 
 def checarOrdenesAbiertas(ticker):
-    n=0
-    salida=0
-    while n<5:
+    n = 0
+    salida = 0
+    while n < 5:
         try:
-            abiertas=cliente.futures_get_open_orders(symbol=ticker)
+            abiertas = cliente.futures_get_open_orders(symbol=ticker)
             salida = {
-                'numero':len(abiertas),
-                'ordenes':abiertas,
+                'numero': len(abiertas),
+                'ordenes': abiertas,
             }
             break
 
         except BinanceAPIException as error:
             n = n + 1
             a = n / 10
-            msj="Se cometió un error en el modulo checarAbiertas, intento no. " + str(n)
+            msj = "Se cometió un error en el modulo checarAbiertas, intento no. " + str(n)
             escribirlog(msj)
             escribirerror(error.message, error.code)
             time.sleep(a)
@@ -634,7 +649,7 @@ def checarOrdenesAbiertas(ticker):
 def check_init_tickers(ticker):
     order = Order()
     data_order = order.read_order()
-    data_order=data_order[ticker]
+    data_order = data_order[ticker]
     Adentro = checarOrdenAdentro(ticker)
     Abiertas = checarOrdenesAbiertas(ticker)
     laQty = Adentro['cantidad']
@@ -662,7 +677,7 @@ def check_init_tickers(ticker):
                 msj = f"it was an open, and an acive orders, next step is set sl and tp orders "
                 escribirlog(msj)
                 miMail(msj)
-                establecerOrdenes(orderIdAbierta,ticker)
+                establecerOrdenes(orderIdAbierta, ticker)
                 protect()
         elif ordenesA > 2:
             msj = f"there´s a critical error, we have an actual inside order, and {ordenesA} open orders"
@@ -683,10 +698,10 @@ def check_init_tickers(ticker):
             miMail(msj)
             protect()
     else:  # there's no acative orde, but maybe is a double bet system, depends on open orders
-        if Abiertas['numero'] == 0: # no active, no opens, remove it from orders
+        if Abiertas['numero'] == 0:  # no active, no opens, remove it from orders
             msj = "system doesn't have open or in orders, this is an initial system "
             escribirlog(msj)
-            order=Order(ticker=ticker)
+            order = Order(ticker=ticker)
             order.del_order()
             # also in ticker
             tk = Ticker(ticker=ticker)
@@ -695,7 +710,8 @@ def check_init_tickers(ticker):
         elif Abiertas['numero'] == 2:
             # son las iniciales a la espera de abrirse, se manda a checarApertura
             checkInit()
-        elif Abiertas['numero'] == 1:  # if bot stop and stop order or tp order has been executed the outcome function don't update data
+        elif Abiertas[
+            'numero'] == 1:  # if bot stop and stop order or tp order has been executed the outcome function don't update data
             # so, let's see which of one of the orders are open
             # ok if the order type=='LIMIT' the stop order won, and else the limit won
             from functions import ultimoPrecio
@@ -704,7 +720,8 @@ def check_init_tickers(ticker):
             exec_price = float(currentOrder['stopPrice'])
             actual_price = ultimoPrecio(ticker)
             adjust = data_order['adjust']
-            if currentOrder['type'] == 'LIMIT':  # the SL order won, now, we can send to stablish order, but only if current price
+            if currentOrder[
+                'type'] == 'LIMIT':  # the SL order won, now, we can send to stablish order, but only if current price
                 # it's below/above the entrance price (it means, that we have a profit, otherwise for safety stop the order
                 # first we need the side
                 if side == "BUY":  # loss below
@@ -712,7 +729,7 @@ def check_init_tickers(ticker):
                     if actual_price > slPrice:  # we're in price bounds, but need to check adjust
                         # adjust, side, priceIn
                         adjust += data.sl
-                        order.update_order(adjust=adjust,side=side,priceIn=exec_price)
+                        order.update_order(adjust=adjust, side=side, priceIn=exec_price)
                         establecerOrdenes(currentOrder['orderId'], ticker)
                         protect()
                         return None
@@ -720,30 +737,31 @@ def check_init_tickers(ticker):
                         # just need to update order data and make datosSalida(), dateOut, priceOut
                         dateOut = currentOrder['updateTime'] / 1000
                         priceOut = currentOrder['price']
-                        order.update_order(dateOut=dateOut,priceOut=priceOut)
+                        order.update_order(dateOut=dateOut, priceOut=priceOut)
                         priceIn = data_order['priceIn']
                         adjust = data_order['adjust']
-                        profit = ((priceOut - priceIn) / priceIn) - adjust - data.sl - 0.0008  # the last commission and sl
-                        datosSalida(ticker,profit,"tie")  # maybe is not a tie
+                        profit = ((
+                                              priceOut - priceIn) / priceIn) - adjust - data.sl - 0.0008  # the last commission and sl
+                        datosSalida(ticker, profit, "tie")  # maybe is not a tie
                         return None
                 elif side == "SELL":  # loss above
                     slPrice = exec_price * (1 + data.sl)  # need this to check if price is out of bet bounds
                     if actual_price < slPrice:  # we're in price bounds
                         # adjust, side, priceIn
                         adjust += data.sl
-                        order.update_order(adjust=adjust,side=side,priceIn=exec_price)
-                        establecerOrdenes(currentOrder['orderId'],ticker)
+                        order.update_order(adjust=adjust, side=side, priceIn=exec_price)
+                        establecerOrdenes(currentOrder['orderId'], ticker)
                         protect()
                         return None
                     else:  # no more gone, let's call the finish function
                         # just need to update order data and make datosSalida(), dateOut, priceOut
                         dateOut = currentOrder['updateTime'] / 1000
                         priceOut = currentOrder['price']
-                        order.update_order(dateOut=dateOut,priceOut=priceOut)
+                        order.update_order(dateOut=dateOut, priceOut=priceOut)
                         priceIn = data_order['priceIn']
                         adjust = data_order['adjust']
                         profit = ((priceIn - priceOut) / priceIn) - adjust - 0.0008  # the last commission
-                        datosSalida(ticker,profit, "tie")  # maybe is not a tie
+                        datosSalida(ticker, profit, "tie")  # maybe is not a tie
                         return None
             else:  # the tp order won, if adjust>0 is indirectTP else directTP
                 if adjust > 0:  # indirectTP
@@ -752,8 +770,8 @@ def check_init_tickers(ticker):
                 else:
                     outcome = "direct TP"
                     profit = data.bet - 0.0008
-                order.update_order(dateOut=currentOrder['updateTime'],priceOut=currentOrder['price'])
-                datosSalida(ticker,profit, outcome)
+                order.update_order(dateOut=currentOrder['updateTime'], priceOut=currentOrder['price'])
+                datosSalida(ticker, profit, outcome)
                 return None
         else:  # cosa incongruente, cancelamos y le damos pa adelante
             from functions_orders import cancelarOrdenes
@@ -767,7 +785,7 @@ def init():
     # the first thing we need to do, is check the len or orders
     order = Order()
     data_order = order.read_order()
-    if len(data_order)>0: # there's active tickers, let's iterate
+    if len(data_order) > 0:  # there's active tickers, let's iterate
         for ticker in data_order:
             check_init_tickers(ticker)
     else:
@@ -781,7 +799,7 @@ def init():
             for ticker in data_ticker:
                 partial_ticker = Ticker(ticker=ticker)
                 partial_ticker.del_ticker()
-        msg=f"this is an initial system, there's no one active ticker in this moment"
+        msg = f"this is an initial system, there's no one active ticker in this moment"
         escribirlog(msg)
         miMail(msg)
 
