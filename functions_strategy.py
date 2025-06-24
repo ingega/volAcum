@@ -611,12 +611,10 @@ def review():
                 make_3bp_entries(df_in)
                 # and that's it, because the system remains in protect()
         else:
-            msg = (f"system works normally, the gmtime is "
-                   f"{time.gmtime()} sended by review "
-                   )
+            msg = "not opportunity available yet"
             escribirlog(msg)
-            miMail(msg)
-        time.sleep(16)  # cicling avoid
+
+        time.sleep(16)  # looping avoid
     # in this point we can check if mail is necessary
     actual_hour = time.gmtime().tm_hour % 4
     actual_minutes = time.gmtime().tm_min
