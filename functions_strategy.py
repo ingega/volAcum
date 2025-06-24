@@ -565,6 +565,7 @@ def protect():
             break
 
 
+@print_func_text
 def review():
     actual_hour = time.gmtime().tm_hour  # las horas
     actual_minutes = time.gmtime().tm_min  # los minutos
@@ -573,10 +574,14 @@ def review():
     actual_minutes %= data.minutes
     # we must notify to email
     # we need review of any ticker get the 3bp
+    print(f"data, actual_hour {actual_hour}"
+          f" actual minute: {actual_minutes}"
+          f" actual seconds: {actual_seconds}"
+          )
     if (
-            actual_hour == data.review_hour - 1
-            and actual_minutes == data.review_minute - 1
-            and actual_seconds > data.review_second
+            actual_hour == data.hours - 1
+            and actual_minutes == data.minutes - 1
+            and actual_seconds > data.seconds
     ):
         msg = (f'is time to check for new oportunities, '
                f'gmtime is {time.gmtime()}'
@@ -615,6 +620,10 @@ def review():
     # in this point we can check if mail is necessary
     actual_hour = time.gmtime().tm_hour % 4
     actual_minutes = time.gmtime().tm_min
+    print(f"mail data; actual_hour: {actual_hour}"
+          f" actual minute: {actual_minutes}"
+          f" actual seconds: {actual_seconds}"
+          )
     if (
             actual_hour == data.review_hour
             and actual_minutes == data.review_minute
