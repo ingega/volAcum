@@ -209,15 +209,8 @@ def establecerOrdenes(orden, ticker):  # order = 0 is for initial bet
     for the moment i take the second one
     '''
     if ordensl == 0:  # let's go
-        msg = ("The orderSL is 0, the pullback/pushup must be agressive, "
-               "so in order to prevent more losses, the bot call error_close")
-        escribirlog(msg)
-        miMail(msg)
-        e = error_close(posicion, ticker)
-        # well, let's remove the ticker from orders and tickers
-        ticker.del_ticker()
-        order.del_order()
-        return
+        e = emergency_set(ticker)
+        return e
     # now the tp order
     ordentp = mandarOrdenTP(ticker, cantidad, posicion, precioTP)
     msj = f"the TP order has seted in price {precioTP} with orderId {ordentp} "
@@ -230,6 +223,108 @@ def establecerOrdenes(orden, ticker):  # order = 0 is for initial bet
         if c != 0:
             msj = f"cancel order, was succesfully, the idOrder was {orden} "
             escribirlog(msj)
+
+
+@print_func_text
+def emergency_set(ticker):
+    """
+    This function is used when an order_sl can't be reached, so
+    1. cancel all open orders
+    2. check the order inside
+    3. "flip it" (with double qty)
+    4. get the  adjust value (the orderSL have the price_in)
+    5. set the new adjust_value, the side value, and actual order
+    6. if adjust > sl_max, the make exit
+    7. call set_orders again
+    :return: None
+    """
+    # 1. cancel all open orders
+    cancelarOrdenes(simbolo=ticker)
+    # 2. check the order inside
+    inside = checarOrdenAdentro(ticker)
+    # i get ticker, cantidad, precioIn, posicion
+    # posicionCierre
+    # also need the precision of ticker
+    tick = Ticker()
+    params = tick.read_ticker()[ticker]
+    side = inside['posicionCierre']
+    qty = inside['cantidad'] * 2
+    if params['qty_presicion'] == 0:
+        qty = int(qty)
+    else:
+        qty = round(qty, params['qty_presicion'])
+    # 3. flip it, with double qty
+    order = mandarOrdenMercado(simbolo=ticker, posicion=side,
+                               cantidad=qty)
+    time.sleep(5)  # in order to be avalaible to read it
+    # 4. get the adjust value
+    # the preview price is in orderSL, the new one in order
+    the_order = Order(ticker=ticker).read_order()[ticker]
+    order_sl = checarOrden(ticker, the_order['orderSL'])
+    price_in = order_sl['precio']
+    actual_order = checarOrden(ticker, order)
+    price_out = actual_order['precio']
+    # before upadte again the_order, let's get the operation_id
+    operation_id = the_order['operation_id']
+    if inside['posicion'] == "BUY":
+        profit = (price_out - price_in) / price_in
+    else:
+        profit = (price_in - price_out) / price_in
+    profit = abs(profit) + 0.0008  # commission
+    adjust = the_order['adjust'] + profit
+    # 5 refresh adjust, but if > sl_max, then go
+    the_order = Order(ticker=ticker)
+    the_order.update_order(priceIn=price_out, side=side,
+                           orderA=order,
+                           adjust=adjust,
+                           )
+    # if bet_continue = true
+    if data.bet_continue:
+        the_order.update_order(epochIn=time.time())
+    # well don't forget the db
+    from strategy import get_trade, get_fee
+    trade = get_trade(ticker, order)
+    commission = trade['commission']
+    pnl = trade['pnl']
+    # fee
+    fee = get_fee(ticker=ticker, operation_id=operation_id)
+    new_record = {
+        'strategy': [data.sistema],
+        'ticker': [ticker],
+        'side': [side],
+        'quantity': [inside['cantidad']],
+        'price': [actual_order['precio']],
+        'type': ['emergency'],
+        'commission': [commission],
+        'fee': [fee['fee']],
+        'epoch_fee': [fee['epoch_fee']],
+        'operation_id': [operation_id],
+        # is sl update
+        'binance_operation_id': [order],
+        'epoch': [actual_order['epoch']],
+        'pnl': [pnl]
+    }
+    from db import Record
+    record = Record()
+    record.add_record(record=new_record)
+    # 6. if adjust > sl_max then go
+    if adjust > data.slmax:  # arrivederci
+        profit = tie_exit(ticker)
+        # update adjust
+        adjust += profit
+        # so, need update adjust
+        make_exit(ticker, adjust, 'SL')
+        return 1
+    # finally set orders again
+    # 100 value for avoid cancellation error
+    e = establecerOrdenes(100, ticker)
+    # inform
+    msg = (f"this message coming from emergency_set, manually check"
+           f" if no error at all"
+           )
+    escribirlog(msg)
+    miMail(msg)
+    return e
 
 
 @print_func_text
@@ -366,7 +461,7 @@ def order_not_found(ticker, orderId):
 
 @print_func_text
 def protect():
-    # this funciton review constantly (every data.timeframe seconds)
+    # this function review constantly (every data.timeframe seconds)
     # if any order has executed, the posibles matchtes are:
     # directTP, indirectTP, sl and tie only,
     # protect review all the tickers added in orders.pkl
@@ -485,7 +580,9 @@ def protect():
                         escribirlog(msg)
                         miMail(msg)
                         # let's call establecerOrdenes
-                        establecerOrdenes(actual_orders[ticker]['orderTP'], ticker)
+                        e= establecerOrdenes(actual_orders[ticker]['orderTP'], ticker)
+                        if e == 1:
+                            break
                     # now the tp
                     tp_order = checarOrden(ticker, actual_orders[ticker]['orderTP'])
                     if tp_order == 0:
@@ -565,6 +662,7 @@ def protect():
             break
 
 
+
 @print_func_text
 def review():
     actual_hour = time.gmtime().tm_hour  # las horas
@@ -573,11 +671,6 @@ def review():
     actual_hour %= data.hours
     actual_minutes %= data.minutes
     # we must notify to email
-    # we need review of any ticker get the 3bp
-    print(f"data, actual_hour {actual_hour}"
-          f" actual minute: {actual_minutes}"
-          f" actual seconds: {actual_seconds}"
-          )
     if (
             actual_hour == data.hours - 1
             and actual_minutes == data.minutes - 1

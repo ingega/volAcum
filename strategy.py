@@ -16,14 +16,19 @@ path = data.path
 @print_func_text
 def inform(the_data, filename=None):  # to inform about the values in entries, and every 4hrs send a mail
     # inform
-    msg = f"there's no entry yet, the values are {the_data}, gmtime is {time.gmtime()}"
+    msg = (f"there's no entry yet, the values are {the_data}, "
+           f"gmtime is {time.gmtime()} init section")
     escribirlog(msg)
     # mail just every 4h
     hour = time.gmtime().tm_hour
     minute = time.gmtime().tm_min
     second = time.gmtime().tm_sec
     hour %= 4
-    if hour == data.review_hour and minute == data.review_minute and second > data.review_second:
+    # debug proposes
+    print(f"hour, minute, second: {hour}, {minute}, {second}")
+    if (hour == data.review_hour
+            and minute == data.review_minute
+            and second > data.review_second):
         miMail(msg, filename)
     # pause = 60 - data.seconds
     # time.sleep(pause + 1)  # avoid loop
