@@ -16,7 +16,7 @@ leverage = 20
 timeframe = 3  # esta variable controla cada cuanto se checan las órdenes
 slmax = 0.1   # esta variable controla la pérdida máxima
 tp = 0.1
-sl = 0.01
+sl = 0.005
 
 path = current_dir
 pathGan = str(parent_dir) + "/"
@@ -37,7 +37,7 @@ debug_mode = False
 # gap=0.03
 # distance=0.015
 forbidden_hour = 12
-bet = 0.03
+bet = 0.005
 time = 10  # this is for prevent loops in everytime()
 bars = 30
 n = 0
