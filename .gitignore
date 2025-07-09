@@ -12,6 +12,7 @@ entries.csv
 ticks.csv
 
 *.csv
+*.xlsx
 
 # pkl files
 
