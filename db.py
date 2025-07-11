@@ -9,21 +9,24 @@ class Record:
         """
         we gonna create the engine object for init
         """
-        self.engine = self.create_engine()
+        self.engine = self.get_engine()
 
-    def create_engine(self):
+    def get_engine(self):
         load_dotenv()
+        """
+        this section is for postgres
         db_host = os.getenv('DB_HOST')
         db_port = os.getenv('DB_PORT')
         db_name = os.getenv('DB_NAME')
         db_user = os.getenv('DB_USER')
         db_password = os.getenv('DB_PASSWORD')
         db_sslmode = os.getenv('DB_SSLMODE')
+        """
+        # this var is for sqlite
+        db_path = os.getenv('SQLITE_DB_PATH')
 
         # create the engine
-        engine = create_engine(
-            f"postgresql://{db_user}:{db_password}@"
-            f"{db_host}:{db_port}/{db_name}?sslmode={db_sslmode}")
+        engine = create_engine(f"sqlite:///{db_path}")
         return engine
 
     def add_record(self, record: dict) -> None:
@@ -85,7 +88,8 @@ class Record:
                 query = f"SELECT * FROM {table_name};"
                 df = pd.read_sql(query, connection)
             print(f"Data for db is ready")
-            return df.to_dict(orient='records')
+            df = df.sort_values(by=["operation_id", "epoch"])
+            return df
         except Exception as e:
             print(f"Error reading data: {e}")
             return None
