@@ -185,7 +185,6 @@ def main():
                     escribirlog(msg)
                     # inform by mail
                     inform(msg)
-                    # miMail(msg)  # in this strategy is not used
                 else:
                     # Get the Bars opor
                     print("let's find an opportunity", time.ctime())

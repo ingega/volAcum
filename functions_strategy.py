@@ -695,7 +695,7 @@ def review():
             # looping preventer
             seconds_to_sleep = 61 - actual_seconds
             time.sleep(seconds_to_sleep)
-            return 
+            return
     actual_hour %= data.hours
     actual_minutes %= data.minutes
     # we must notify to email
