@@ -678,9 +678,23 @@ def protect():
 
 @print_func_text
 def review():
+    """this function is designed to check for new opportunities"""
     actual_hour = time.gmtime().tm_hour  # las horas
     actual_minutes = time.gmtime().tm_min  # los minutos
     actual_seconds = time.gmtime().tm_sec
+    if actual_hour < data.forbidden_hour:
+        actual_hour %= data.hours
+        actual_minutes %= data.minutes
+        if (actual_hour == data.review_hour
+            and actual_minutes == data.review_minute
+            and actual_seconds > data.review_second):
+            msg = (f"the system is not allowed in forbbiden hours"
+                   f"but works normally")
+            escribirlog(msg)
+            miMail(msg)
+            # looping preventer
+            seconds_to_sleep = 61 - actual_seconds
+            time.sleep(seconds_to_sleep)
     actual_hour %= data.hours
     actual_minutes %= data.minutes
     # we must notify to email

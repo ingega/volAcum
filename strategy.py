@@ -1,5 +1,3 @@
-import time
-
 from functions_time import *
 import data
 from functions import miMail, BinanceAPIException
@@ -185,6 +183,8 @@ def main():
                            f"th hour is not allowed for strategy, "
                            f"the gmtime is {time.asctime(time.gmtime())} ")
                     escribirlog(msg)
+                    # inform by mail
+                    inform(msg)
                     # miMail(msg)  # in this strategy is not used
                 else:
                     # Get the Bars opor
