@@ -1,3 +1,5 @@
+import pandas as pd
+
 from functions_time import *
 import data
 from functions import miMail, BinanceAPIException
@@ -112,8 +114,12 @@ def get_trade(ticker, order_id):
             break
         time.sleep(1)
     if trades:
-        commission = float(trades[0]['commission'])
-        pnl = float(trades[0]['realizedPnl'])
+        # the operation can get so many trades, so, is necesary summarize
+        df = pd.DataFrame(trades)
+        df['commission'] = df['commission'].astype('float')
+        df['realizedPnl'] = df['realizedPnl'].astype('float')
+        commission = df['commission'].sum()
+        pnl = df['realizedPnl'].sum()
     else:
         msg = f"the trade info can't get the  commission info"
         escribirlog(msg)
